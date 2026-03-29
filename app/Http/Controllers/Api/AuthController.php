@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -19,16 +20,19 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'status' => false,
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
+        //se crea el token de autenticación para el usuario
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
             'status' => true,
             'message' => 'Login exitoso',
+            'token' => $token,
             'user' => $user
         ]);
     }
@@ -52,6 +56,16 @@ class AuthController extends Controller
             'status' => true,
             'message' => 'Usuario creado',
             'user' => $user
+        ]);
+    }
+    // LOGOUT
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Sesión cerrada'
         ]);
     }
 }
