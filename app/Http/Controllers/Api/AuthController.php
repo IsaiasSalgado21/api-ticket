@@ -7,35 +7,36 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
     // LOGIN
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Credenciales incorrectas'
-            ], 401);
-        }
-        //se crea el token de autenticación para el usuario
-        $token = $user->createToken('auth-token')->plainTextToken;
-
+    if (!Auth::attempt($request->only('email', 'password'))) {
         return response()->json([
-            'status' => true,
-            'message' => 'Login exitoso',
-            'token' => $token,
-            'user' => $user
-        ]);
+            'status' => false,
+            'message' => 'Credenciales incorrectas'
+        ], 401);
     }
+
+    $user = Auth::user();
+
+    $token = $user->createToken('auth-token')->plainTextToken;
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Login exitoso',
+        'token' => $token,
+        'user' => new UserResource($user) // 🔥 aquí el cambio
+    ]);
+}
 
     // REGISTRO
     public function register(Request $request)
