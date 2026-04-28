@@ -1,21 +1,19 @@
 [phases.setup]
 # Forzamos las versiones estables que Nix sí conoce
-nixPkgs = ["php83", "nodejs_20", "npm-10_x", "composer"]
+nixPkgs = ["php83", "composer"]
 
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader",
   # Instalamos dependencias de JS y compilamos con Vite para que no falle Tailwind
-  "npm install",
-  "npm run build", 
+  "composer install --no-dev --optimize-autoloader",
   "php artisan key:generate --force",
   "php artisan migrate --force",
   "php artisan config:cache",
-  "php artisan route:cache",
-  "php artisan view:cache"
+  "php artisan route:cache"
 ]
 
 [start]
 # NO USES 'php artisan serve' en producción. 
 # Railway espera que el servidor se mantenga activo y 'serve' es solo para desarrollo local.
-cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
